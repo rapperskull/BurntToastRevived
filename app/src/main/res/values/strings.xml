@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Burnt Toast Revived</string>
+    <string name="select_size">Select size</string>
+    <string name="XS">XS</string>
+    <string name="S">S</string>
+    <string name="M">M</string>
+    <string name="L">L</string>
+    <string name="XL">XL</string>
+    <string name="XXL">XXL</string>
+</resources>
