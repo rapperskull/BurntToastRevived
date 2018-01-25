@@ -21,6 +21,7 @@ import de.robv.android.xposed.XposedBridge;
 public class Main implements IXposedHookZygoteInit {
     private XSharedPreferences pref;
     private int size;
+    private int margin;
     private Context context;
     private int LateralMargin=0;
     private int VerticalMargin=0;
@@ -39,16 +40,6 @@ public class Main implements IXposedHookZygoteInit {
                 if(liparam.view instanceof LinearLayout){
                     XposedBridge.log("Burnt Toast Revived: Found LinearLayout");
 
-                    if (isN){
-                        LateralMargin = 20;
-                        VerticalMargin = 15;
-                        CentralMargin = 10;
-                    } else {
-                        LateralMargin = 0;
-                        VerticalMargin = 0;
-                        CentralMargin = 10;
-                    }
-
                     LinearLayout layout = (LinearLayout) liparam.view;
                     context = layout.getContext();
                     TextView view = (TextView) liparam.view.findViewById(android.R.id.message);
@@ -63,8 +54,9 @@ public class Main implements IXposedHookZygoteInit {
                     PackageManager pm = context.getPackageManager();
 
                     ImageView imageView = new ImageView(context);
-                    imageView.setMaxHeight(view.getHeight() + size);
-                    imageView.setMaxWidth(view.getHeight() + size);
+                    int imageViewSize = Math.max(view.getHeight(),size);
+                    imageView.setMaxHeight(imageViewSize);
+                    imageView.setMaxWidth(imageViewSize);
                     imageView.setAdjustViewBounds(true);
                     imageView.setImageDrawable(context.getApplicationInfo().loadIcon(pm));
 
@@ -79,10 +71,6 @@ public class Main implements IXposedHookZygoteInit {
 
                 } else if(liparam.view instanceof RelativeLayout){
                     XposedBridge.log("Burnt Toast Revived: Found RelativeLayout");
-
-                    LateralMargin = 0;
-                    VerticalMargin = 0;
-                    CentralMargin = 10;
 
                     RelativeLayout layout = (RelativeLayout) liparam.view;
                     context = layout.getContext();
@@ -100,8 +88,9 @@ public class Main implements IXposedHookZygoteInit {
                     PackageManager pm = context.getPackageManager();
 
                     ImageView imageView = new ImageView(context);
-                    imageView.setMaxHeight(view.getHeight() + size);
-                    imageView.setMaxWidth(view.getHeight() + size);
+                    int imageViewSize = Math.max(view.getHeight(),size);
+                    imageView.setMaxHeight(imageViewSize);
+                    imageView.setMaxWidth(imageViewSize);
                     imageView.setAdjustViewBounds(true);
                     imageView.setImageDrawable(context.getApplicationInfo().loadIcon(pm));
 
@@ -152,8 +141,19 @@ public class Main implements IXposedHookZygoteInit {
         }
         pref.getFile().setReadable(true, false);
         pref.reload();
-        size = pref.getInt("icon_size", 128);
-        XposedBridge.log("Burnt Toast Revived: Got size of " + Integer.toString(size));
+        size = pref.getInt("icon_size", 96);
+        margin = pref.getInt("margin_size", 1);
+        XposedBridge.log("Burnt Toast Revived: Got size of " + Integer.toString(size) + " and margin of " + Integer.toString(margin));
+
+        CentralMargin = 5+5*margin;
+        if(margin==0){
+            LateralMargin = 0;
+            VerticalMargin = 0;
+        } else {
+            LateralMargin = 10*(margin+1);
+            VerticalMargin = 10+5*margin;
+        }
+
     }
 
 }

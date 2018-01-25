@@ -18,7 +18,9 @@ public class MainActivity extends AppCompatActivity {
     final boolean isN=(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
     private Context context;
     static String mPrefsName="settings";
+    private Toast toast;
     final int baseSize=32;
+    final int increment=16;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,14 +33,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         final SharedPreferences sharedPref = getPreferencesAndKeepItReadable(context, mPrefsName);
-        int storedValue = sharedPref.getInt("icon_size",128);
+        int storedValue = sharedPref.getInt("icon_size",96);
+        int marginValue = sharedPref.getInt("margin_size", 1);
 
-        SeekBar mySeekBar = (SeekBar) findViewById(R.id.seekBar);
+        SeekBar iconSeekBar = (SeekBar) findViewById(R.id.seekBar);
         if(storedValue>0){
-            mySeekBar.setProgress(sizeToSlide(storedValue));
+            iconSeekBar.setProgress(sizeToSlide(storedValue));
         }
 
-        mySeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+        iconSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
@@ -52,6 +55,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        SeekBar marginSeekBar = (SeekBar) findViewById(R.id.seekBar2);
+        if(marginValue>=0){
+            marginSeekBar.setProgress(marginValue);
+        }
+
+        marginSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser) {
+                saveMargin(progress,sharedPref);
+            }
+        });
+
     }
 
     private void savePreferences(int newValue, SharedPreferences sharedPref){
@@ -61,12 +83,24 @@ public class MainActivity extends AppCompatActivity {
             editor.commit();
             generateToast("Set size to " + Integer.toString(newValue),true);
         } else {
-            XposedBridge.log("Burnt Toast Revived: Tried to set a value of " + Integer.toString(newValue));
+            XposedBridge.log("Burnt Toast Revived: Tried to set an icon value of " + Integer.toString(newValue));
+        }
+    }
+
+    private void saveMargin(int newValue, SharedPreferences sharedPref){
+        if(newValue>=0){
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putInt("margin_size", newValue);
+            editor.commit();
+            generateToast("Set margin to " + Integer.toString(newValue),true);
+        } else {
+            XposedBridge.log("Burnt Toast Revived: Tried to set a margin value of " + Integer.toString(newValue));
         }
     }
 
     private void generateToast(String message, boolean center){
-        Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
+        if (toast != null) toast.cancel();
+        toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
         if(center) {
             toast.setGravity(Gravity.CENTER, 0, 0);
         }
@@ -141,10 +175,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int slideToSize(int slide){
-        return baseSize*(slide+1);
+        return baseSize+increment*slide;
     }
     private int sizeToSlide(int size){
-        return Math.round((size/baseSize)-1);
+        return Math.round((size-baseSize)/increment);
     }
 
 }
